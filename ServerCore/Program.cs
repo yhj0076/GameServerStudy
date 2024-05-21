@@ -4,6 +4,39 @@ using System.Threading;
 
 namespace ServerCore
 {
+    class SessionManager
+    {
+        static object _lock = new object();
+        
+        public static void TestSession()
+        {
+            lock(_lock) { }
+        }
+
+        public static void Test()
+        {
+            UserManager.TestUser();
+        }
+    }
+
+    class UserManager
+    {
+        static object _lock = new Object();
+
+        public static void Test()
+        {
+            lock(_lock) 
+            {
+                SessionManager.TestSession();
+            }
+        }
+
+        public static void TestUser()
+        {
+            lock(_lock) { }
+        }
+    }
+
     class Program
     {
         static int number = 0;
@@ -25,11 +58,11 @@ namespace ServerCore
             // Enter는 Lock, Exit은 Unlock이다.
             // Lock에 관한 자세한 설명은 운영체제론 참조.
 
-            for(int i = 0; i < 1000000; i++)
+            for(int i = 0; i < 10000; i++)
             {
                 lock(_obj) 
                 {
-                    number++;
+                    SessionManager.Test();
                 }
                 // 위 코드는 하단 코드(try-finally문)을 깔끔하게 처리하는 방법이다.
                 /*
@@ -59,14 +92,16 @@ namespace ServerCore
             } 
         }
 
-        // Deadlock(데드락) : 잠가놓고 안 열어서 더 이상 사용할 수 없는 자물쇠를 일컫는다.
+        // Deadlock(데드락)
+        // 잠가놓고 안 열어서 더 이상 사용할 수 없는 자물쇠를 일컫는다.
+        // 주로 교착 상태에서 일어난다.
         static void Thread_2()
         {
-            for (int i = 0; i < 1000000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 lock (_obj)
                 {
-                    number--;
+                    UserManager.Test();
                 }
             }
         }
@@ -78,6 +113,9 @@ namespace ServerCore
             Task t1 = new Task(Thread_1);
             Task t2 = new Task(Thread_2);
             t1.Start();
+
+            Thread.Sleep(100);
+
             t2.Start();
 
             Task.WaitAll(t1, t2);
