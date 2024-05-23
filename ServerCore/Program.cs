@@ -10,12 +10,32 @@ namespace ServerCore
 
         public void Acquire()
         {
-            // while (true)
-            // {
-            //     int original = Interlocked.Exchange(ref _locked, 1);
-            //     if(original == 0) { break; }
-            // }
+            while (true)
+            {
+                // int original = Interlocked.Exchange(ref _locked, 1);
+                // if(original == 0) { break; }
 
+                /* 위 코드의 진행 방식
+                 
+                 {
+                    int original = _locked;
+                    _locked = 1;
+                    if( original == 0 )
+                        break;
+                 }
+                 {
+                    if(_locked == 0)
+                        _locked == 1;
+                 }
+
+                 */
+
+                // CAS(Comapre - And - Swap)
+                int expected = 0;
+                int desired = 1;
+                if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
+                    break;               
+            }
         }
 
         public void Release() 
