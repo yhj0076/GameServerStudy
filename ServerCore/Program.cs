@@ -4,72 +4,50 @@ using System.Threading;
 
 namespace ServerCore
 {
-    class SpinLock
+    /*class Lock
     {
-        volatile int _locked = 0;
+
+        // 커널을 이용하면 속도가 겁나게 느리다.
+        // bool == 커널
+        // AutoResetEvent _available = new AutoResetEvent(true);   // 톨게이트 개념. true면 열려있고 false면 닫혀있다.
+
+        ManualResetEvent _available = new ManualResetEvent(true);   // 방문 개념.
 
         public void Acquire()
         {
-            while (true)
-            {
-                // int original = Interlocked.Exchange(ref _locked, 1);
-                // if(original == 0) { break; }
-
-                /* 위 코드의 진행 방식
-                 
-                 {
-                    int original = _locked;
-                    _locked = 1;
-                    if( original == 0 )
-                        break;
-                 }
-                 {
-                    if(_locked == 0)
-                        _locked == 1;
-                 }
-
-                 */
-
-                // CAS(Comapre - And - Swap)
-                int expected = 0;
-                int desired = 1;
-                if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
-                    break;               
-
-                // 쉬다 올게~
-                // Thread.Sleep(1);    // 무조건 휴식 == 무조긴 1ms 정도 쉬고 싶어요.
-                // Thread.Sleep(0);    // 조건부 양보 == 나보다 우선순위가 낮은 애들한테는 양보 불가 == 우선순위가 나보다 같거나 높은 쓰레드가 없으면 다시 본인한테
-                // Thread.Yield();     // 관대한 양보 == 관대하게 양보할테니, 지금 실행이 가능한 쓰레드가 있으면 실행하세요. == 실행 가능한 애가 없으면 남은 시간 소진
-            }
+            _available.WaitOne();   // 입장 시도
+            _available.Reset(); // 문을 닫는다.
         }
 
         public void Release() 
         {
-            _locked = 0;
+            _available.Set();   // 문을 열어준다.
         }
-    }
+    }*/
+
     class Program
     {
         static int _num = 0;
-        static SpinLock _lock = new SpinLock();
+        //static Lock _lock = new Lock();
+        static Mutex _lock = new Mutex();
 
         static void Thread_1()
         {
-            for(int i = 0; i < 100000; i++) 
+            for(int i = 0; i < 1000000000; i++) 
             {
-                _lock.Acquire();
+                _lock.WaitOne();
                 _num++;
-                _lock.Release();
+                _lock.ReleaseMutex();
             }
         }
 
         static void Thread_2()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 1000000000; i++)
             {
-                _lock.Acquire();
+                _lock.WaitOne();
                 _num--;
-                _lock.Release();
+                _lock.ReleaseMutex();
             }
         }
 
