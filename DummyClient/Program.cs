@@ -15,11 +15,13 @@ namespace DummyClient
             IPAddress ipAddr = ipHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            // 휴대폰 설정
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
 
             while (true)
             {
+                // 휴대폰 설정
+                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
                 try
                 {
                     // 문지기한테 입장 문의
@@ -27,8 +29,11 @@ namespace DummyClient
                     Console.WriteLine($"Connected To {socket.RemoteEndPoint}");
 
                     // 보낸다
-                    byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World!");
-                    int sendByte = socket.Send(sendBuff);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        byte[] sendBuff = Encoding.UTF8.GetBytes($"Hello World! {i}");
+                        int sendByte = socket.Send(sendBuff);
+                    }
 
                     // 받는다
                     byte[] recvBuff = new byte[1024];
