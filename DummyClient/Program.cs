@@ -26,7 +26,7 @@ namespace DummyClient
                 {
                     // 문지기한테 입장 문의
                     socket.Connect(endPoint);
-                    Console.WriteLine($"Connected To {socket.RemoteEndPoint}");
+                    Console.WriteLine($"Connected To {socket.RemoteEndPoint.ToString()}");
 
                     // 보낸다
                     for (int i = 0; i < 5; i++)

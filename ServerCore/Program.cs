@@ -7,32 +7,40 @@ using System.Threading;
 
 namespace ServerCore
 {
+    class GameSession : Session
+    {
+        public override void OnConnected(EndPoint endpoint)
+        {
+            Console.WriteLine($"OnConnected bytes: {endpoint}");
+            
+            byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server !");
+            Send(sendBuff);
+
+            Thread.Sleep(1000);
+
+            Disconnect();
+        }
+
+        public override void OnRecv(ArraySegment<byte> buffer)
+        {
+            string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
+            Console.WriteLine($"[From Client] {recvData}");
+        }
+
+        public override void OnSend(int numOfBytes)
+        {
+            Console.WriteLine($"Transferred bytes: {numOfBytes}");
+        }
+
+        public override void OnDisconnected(EndPoint endpoint)
+        {
+            Console.WriteLine($"OnDisconnected bytes: {endpoint}");
+        }
+    }
+    
     class Program
     {
         static Listener _listener = new Listener();
-
-        static void OnAcceptHandler(Socket clientSocket)
-        {
-            try
-            {
-
-                Session session = new Session();
-                session.Start(clientSocket);
-
-                byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server !");
-                session.Send(sendBuff);
-
-                Thread.Sleep(1000);
-
-                session.Disconnect();
-                session.Disconnect();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-        }
-
         static void Main(string[] args)
         {
             // DNS(Domain Name System
@@ -43,10 +51,9 @@ namespace ServerCore
 
             // www.gomi.com -> 123.123.123.123
 
-            // 문지기
-            Socket listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            _listener.init(endPoint, OnAcceptHandler);
+            _listener.init(endPoint, () => {
+                return new GameSession();
+            });
             Console.WriteLine("Listening...");
             while (true)
             {
