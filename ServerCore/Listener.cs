@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    internal class Listener
+    public class Listener
     {
         Socket _listenSocket;
         Func<Session> _sessionFactory;
