@@ -10,15 +10,30 @@ namespace Server;
 
 class GameSession : Session
 {
+    class Knight
+    {
+        public int hp;
+        public int attack;
+    }
+    
     public override void OnConnected(EndPoint endpoint)
     {
         Console.WriteLine($"OnConnected bytes: {endpoint}");
-            
-        byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server !");
+
+        Knight knight = new Knight() { hp = 100, attack = 10 };
+        
+        ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
+        byte[] buffer = BitConverter.GetBytes(knight.hp);
+        byte[] buffer2 = BitConverter.GetBytes(knight.attack);
+        Array.Copy(buffer, 0, openSegment.Array,openSegment.Offset, buffer.Length);
+        Array.Copy(buffer2, 0, openSegment.Array,openSegment.Offset + buffer.Length, buffer2.Length);
+        ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
+        
+        // 100명
+        // 1 -> 이동패킷이 100명
+        // 100 -> 이동패킷이 100 * 100 = 1만
         Send(sendBuff);
-
         Thread.Sleep(1000);
-
         Disconnect();
     }
 
