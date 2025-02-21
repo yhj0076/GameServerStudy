@@ -8,23 +8,23 @@ using ServerCore;
 
 namespace Server;
 
-class GameSession : Session
+class Packet
 {
-    class Knight
-    {
-        public int hp;
-        public int attack;
-    }
-    
+    public ushort size;
+    public ushort packetId;
+}
+
+class GameSession : PacketSession
+{
     public override void OnConnected(EndPoint endpoint)
     {
         Console.WriteLine($"OnConnected bytes: {endpoint}");
 
-        Knight knight = new Knight() { hp = 100, attack = 10 };
+        /*Packet packet = new Packet() { size = 100, packetId = 10 };
         
         ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
-        byte[] buffer = BitConverter.GetBytes(knight.hp);
-        byte[] buffer2 = BitConverter.GetBytes(knight.attack);
+        byte[] buffer = BitConverter.GetBytes(packet.size);
+        byte[] buffer2 = BitConverter.GetBytes(packet.packetId);
         Array.Copy(buffer, 0, openSegment.Array,openSegment.Offset, buffer.Length);
         Array.Copy(buffer2, 0, openSegment.Array,openSegment.Offset + buffer.Length, buffer2.Length);
         ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
@@ -32,18 +32,18 @@ class GameSession : Session
         // 100명
         // 1 -> 이동패킷이 100명
         // 100 -> 이동패킷이 100 * 100 = 1만
-        Send(sendBuff);
-        Thread.Sleep(1000);
+        Send(sendBuff);*/
+        Thread.Sleep(5000);
         Disconnect();
     }
 
-    public override int OnRecv(ArraySegment<byte> buffer)
+    public override void OnRecvPacket(ArraySegment<byte> arraySegment)
     {
-        string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-        Console.WriteLine($"[From Client] {recvData}");
-        return buffer.Count;
+        ushort size = BitConverter.ToUInt16(arraySegment.Array, arraySegment.Offset);
+        ushort id = BitConverter.ToUInt16(arraySegment.Array, arraySegment.Offset + 2);
+        Console.WriteLine($"OnRecvPacket id : {id}, size: {size}");
     }
-
+    
     public override void OnSend(int numOfBytes)
     {
         Console.WriteLine($"Transferred bytes: {numOfBytes}");
