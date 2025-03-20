@@ -20,7 +20,8 @@ public abstract class Packet
 class PlayerInfoReq : Packet
 {
     public long playerId;
-
+    public string name;
+    
     public PlayerInfoReq()
     {
         this.packetId = (ushort)PacketID.PlayerInfoReq;
@@ -28,19 +29,28 @@ class PlayerInfoReq : Packet
 
     public override ArraySegment<byte> Write()
     {
-        ArraySegment<byte> s = SendBufferHelper.Open(4096);
+        ArraySegment<byte> segment = SendBufferHelper.Open(4096);
 
         ushort count = 0;
         bool success = true;
-            
-            
-        count += 2;
-        success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.packetId);
-        count += 2;
-        success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.playerId);
-        count += 8;
-        success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count);
 
+        Span<byte> s = new Span<byte>(segment.Array, segment.Offset, segment.Count);
+            
+        count += sizeof(ushort);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.packetId);
+        count += sizeof(ushort);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
+        count += sizeof(long);
+        
+        // string
+        ushort nameLen = (ushort)Encoding.Unicode.GetByteCount(this.name);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+        count += sizeof(ushort);
+        Array.Copy(Encoding.Unicode.GetBytes(this.name), 0, segment.Array, count, nameLen);
+        count += nameLen;
+        
+        success &= BitConverter.TryWriteBytes(s, count);
+        
         if (!success)
             return null;
         
@@ -50,13 +60,16 @@ class PlayerInfoReq : Packet
     public override void Read(ArraySegment<byte> s)
     {
         ushort count = 0;
-        // ushort size = BitConverter.ToUInt16(s.Array, s.Offset);
-        count += 2;
-        // ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
-        count += 2;
+        ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(s.Array, s.Offset, s.Count);
+        count += sizeof(ushort);
+        count += sizeof(ushort);
+        this.playerId = BitConverter.ToInt64(span.Slice(count, span.Length - count));
+        count += sizeof(long);
         
-        this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array, s.Offset + count, s.Count - count));
-        count += 8;
+        // string
+        ushort nameLen = BitConverter.ToUInt16(span.Slice(count, span.Length - count));
+        count += sizeof(ushort);
+        this.name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
     }
 }
 
@@ -71,20 +84,7 @@ class ClientSession : PacketSession
     public override void OnConnected(EndPoint endpoint)
     {
         Console.WriteLine($"OnConnected bytes: {endpoint}");
-
-        // Packet packet = new Packet() { size = 100, packetId = 10 };
-        //
-        // ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
-        // byte[] buffer = BitConverter.GetBytes(packet.size);
-        // byte[] buffer2 = BitConverter.GetBytes(packet.packetId);
-        // Array.Copy(buffer, 0, openSegment.Array,openSegment.Offset, buffer.Length);
-        // Array.Copy(buffer2, 0, openSegment.Array,openSegment.Offset + buffer.Length, buffer2.Length);
-        // ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
-        //
-        // // 100명
-        // // 1 -> 이동패킷이 100명
-        // // 100 -> 이동패킷이 100 * 100 = 1만
-        // Send(sendBuff);
+        
         Thread.Sleep(5000);
         Disconnect();
     }
@@ -103,7 +103,7 @@ class ClientSession : PacketSession
             {
                 PlayerInfoReq p = new PlayerInfoReq();
                 p.Read(buffer);
-                Console.WriteLine($"PlayerInfoReq : {p.playerId}");
+                Console.WriteLine($"PlayerInfoReq : {p.playerId} {p.name}");
                 break;
             }
         }
