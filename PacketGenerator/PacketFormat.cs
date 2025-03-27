@@ -63,7 +63,8 @@ public enum PacketID
         count += sizeof(ushort);
         {2}
     }}
-}}";
+}}
+";
 
     // {0} 변수 형식
     // {1} 변수 이름

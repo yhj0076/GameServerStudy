@@ -1,12 +1,6 @@
-using System;
-using System.Diagnostics;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using ServerCore;
-
-namespace Server;
 
 public enum PacketID
 {
@@ -183,53 +177,5 @@ class Test
         count += sizeof(ushort);
         this.testInt = BitConverter.ToInt32(span.Slice(count, span.Length - count));
 		count += sizeof(int);
-    }
-}
-
-class ClientSession : PacketSession
-{
-    public override void OnConnected(EndPoint endpoint)
-    {
-        Console.WriteLine($"OnConnected bytes: {endpoint}");
-        
-        Thread.Sleep(5000);
-        Disconnect();
-    }
-
-    public override void OnRecvPacket(ArraySegment<byte> buffer)
-    {
-        ushort count = 0;
-        ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
-        count += 2;
-        ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
-        count += 2;
-
-        switch ((PacketID)id)
-        {
-            case PacketID.PlayerInfoReq:
-            {
-                PlayerInfoReq p = new PlayerInfoReq();
-                p.Read(buffer);
-                Console.WriteLine($"PlayerInfoReq : {p.playerId} {p.name}");
-
-                foreach (var skill in p.skills)
-                {
-                    Console.WriteLine($"Skill({skill.id})({skill.level})({skill.duration})");
-                }
-                break;
-            }
-        }
-        
-        Console.WriteLine($"OnRecvPacket id : {id}, size: {size}");
-    }
-    
-    public override void OnSend(int numOfBytes)
-    {
-        Console.WriteLine($"Transferred bytes: {numOfBytes}");
-    }
-
-    public override void OnDisconnected(EndPoint endpoint)
-    {
-        Console.WriteLine($"OnDisconnected bytes: {endpoint}");
     }
 }
