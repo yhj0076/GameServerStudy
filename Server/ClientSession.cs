@@ -15,7 +15,14 @@ public enum PacketID
 	
 }
 
-class PlayerInfoReq
+public interface IPacket
+{
+	ushort Protocol { get; }
+	void Read(ArraySegment<byte> segment);
+	ArraySegment<byte> Write();
+}
+
+class PlayerInfoReq : IPacket
 {
     public byte testByte;
 	public long playerId;
@@ -85,6 +92,8 @@ class PlayerInfoReq
 	}
 	public List<Skill> skills = new List<Skill>();
 
+    public ushort Protocol { get { return (ushort)PacketID.PlayerInfoReq; } }
+
     public ArraySegment<byte> Write()
     {
         ArraySegment<byte> segment = SendBufferHelper.Open(4096);
@@ -147,9 +156,11 @@ class PlayerInfoReq
 		}
     }
 }
-class Test
+class Test : IPacket
 {
     public int testInt;
+
+    public ushort Protocol { get { return (ushort)PacketID.Test; } }
 
     public ArraySegment<byte> Write()
     {
@@ -186,6 +197,7 @@ class Test
     }
 }
 
+
 class ClientSession : PacketSession
 {
     public override void OnConnected(EndPoint endpoint)
@@ -198,29 +210,7 @@ class ClientSession : PacketSession
 
     public override void OnRecvPacket(ArraySegment<byte> buffer)
     {
-        ushort count = 0;
-        ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
-        count += 2;
-        ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
-        count += 2;
-
-        switch ((PacketID)id)
-        {
-            case PacketID.PlayerInfoReq:
-            {
-                PlayerInfoReq p = new PlayerInfoReq();
-                p.Read(buffer);
-                Console.WriteLine($"PlayerInfoReq : {p.playerId} {p.name}");
-
-                foreach (var skill in p.skills)
-                {
-                    Console.WriteLine($"Skill({skill.id})({skill.level})({skill.duration})");
-                }
-                break;
-            }
-        }
-        
-        Console.WriteLine($"OnRecvPacket id : {id}, size: {size}");
+	    PacketManager.Instance.OnRecvPacket(this, buffer);
     }
     
     public override void OnSend(int numOfBytes)

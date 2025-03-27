@@ -14,8 +14,17 @@ public enum PacketID
     {0}
 }}
 
+interface IPacket
+{{
+	ushort Protocol {{ get; }}
+	void Read(ArraySegment<byte> segment);
+	ArraySegment<byte> Write();
+}}
+
 {1}";
 
+    
+    
     // {0} 패킷 이름
     // {1} 패킷 번호
     public static string pakcetEnumFormat = 
@@ -28,9 +37,11 @@ public enum PacketID
     // {2} 멤버 변수 Read
     // {3} 멤버 변수 Write
     public static string packetFromat = 
-@"class {0}
+@"class {0} : IPacket
 {{
     {1}
+
+    public ushort Protocol {{ get {{ return (ushort)PacketID.{0}; }} }}
 
     public ArraySegment<byte> Write()
     {{

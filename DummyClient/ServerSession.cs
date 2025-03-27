@@ -13,7 +13,14 @@ public enum PacketID
 	
 }
 
-class PlayerInfoReq
+public interface IPacket
+{
+	ushort Protocol { get; }
+	void Read(ArraySegment<byte> segment);
+	ArraySegment<byte> Write();
+}
+
+class PlayerInfoReq : IPacket
 {
     public byte testByte;
 	public long playerId;
@@ -83,6 +90,8 @@ class PlayerInfoReq
 	}
 	public List<Skill> skills = new List<Skill>();
 
+    public ushort Protocol { get { return (ushort)PacketID.PlayerInfoReq; } }
+
     public ArraySegment<byte> Write()
     {
         ArraySegment<byte> segment = SendBufferHelper.Open(4096);
@@ -144,9 +153,12 @@ class PlayerInfoReq
 		    skills.Add(skill);
 		}
     }
-}class Test
+}
+class Test : IPacket
 {
     public int testInt;
+
+    public ushort Protocol { get { return (ushort)PacketID.Test; } }
 
     public ArraySegment<byte> Write()
     {
@@ -182,6 +194,7 @@ class PlayerInfoReq
 		count += sizeof(int);
     }
 }
+
 class ServerSession : Session
 {
 
