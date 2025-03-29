@@ -8,14 +8,17 @@ using ServerCore;
 
 namespace Server;
 
-class ClientSession : PacketSession
+public class ClientSession : PacketSession
 {
+    public int SessionId { get; set; }
+    public GameRoom Room { get; set; }
+    
     public override void OnConnected(EndPoint endpoint)
     {
         Console.WriteLine($"OnConnected bytes: {endpoint}");
         
-        Thread.Sleep(5000);
-        Disconnect();
+        // TODO
+        Program.Room.Enter(this);
     }
 
     public override void OnRecvPacket(ArraySegment<byte> buffer)
@@ -30,6 +33,13 @@ class ClientSession : PacketSession
 
     public override void OnDisconnected(EndPoint endpoint)
     {
-        Console.WriteLine($"OnDisconnected bytes: {endpoint}");
+        SessionManager.Instance.Remove(this);
+        if (Room != null)
+        {
+            Room.Leave(this);
+            Room = null;
+        }
+        
+        Console.WriteLine($"OnDisconnected bytes: {endpoint}"); 
     }
 }

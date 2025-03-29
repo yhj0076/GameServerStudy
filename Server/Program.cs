@@ -13,9 +13,10 @@ namespace Server;
 class Program
 {
     static Listener _listener = new Listener();
+    public static GameRoom Room = new GameRoom();
     static void Main(string[] args)
     {
-        PacketManager.Instance.Register();
+        
         
         // DNS(Domain Name System
         string host = Dns.GetHostName();
@@ -25,8 +26,9 @@ class Program
 
         // www.gomi.com -> 123.123.123.123
 
-        _listener.init(endPoint, () => {
-            return new ClientSession();
+        _listener.init(endPoint, () =>
+        {
+            return SessionManager.Instance.Generate();
         });
         Console.WriteLine("Listening...");
         while (true)
