@@ -13,7 +13,10 @@ public class PacketHandler
             return;
         }
         
-        clientSession.Room.Broadcast(clientSession, chatPacket.chat);
+        GameRoom room = clientSession.Room;
+        room.Push(
+            () => room.Broadcast(clientSession, chatPacket.chat)
+            );
         
         // Console.WriteLine($"PlayerInfoReq : {p.playerId} {p.name}");
         //
