@@ -20,7 +20,7 @@ public class GameRoom : IJobQueue
 
         ArraySegment<byte> segment = packet.Write();
 
-
+        // TODO : 시간 복잡도가 N^2이다.
         foreach (ClientSession s in _sessions)
         {
             s.Send(segment);
