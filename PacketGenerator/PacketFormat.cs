@@ -4,7 +4,9 @@ public class PacketFormat
 {
     // {0} 패킷 등록
     public static string managerFormat = 
-@"using ServerCore;
+@"using System;
+using System.Collections.Generic;
+using ServerCore;
 
 class PacketManager
 {{
@@ -59,7 +61,8 @@ class PacketManager
     // {0} 패킷 이름/번호 목록
     // {1} 패킷 목록
     public static string fileFormat = 
-@"using System.Net;
+@"using System;
+using System.Net;
 using System.Text;
 using ServerCore;
 
